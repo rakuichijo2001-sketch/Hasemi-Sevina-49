@@ -1,28 +1,64 @@
-# Yêu cầu sơ bộ — Hasemi Sevina 49
+# Hasemi-Sevina-49 — RTL v0.1 requirements baseline
 
-## Bài toán
+## 1. Role in the system
 
-Giám sát **dấu hiệu** thay đổi tại một taluy đường đèo ở Lâm Đồng. Chip xử lý dữ liệu số; cảm biến, mạch số hoá, nguồn, truyền thông và cảnh báo hiện trường có thể nằm ngoài chip. Quyết định nhúng MCU sẽ dựa trên đo diện tích, công suất và nhu cầu vận hành, không mặc định rằng MCU đã có.
+Hasemi-Sevina-49 is the deterministic **Layer-1 edge risk processor** in a larger monitoring architecture. It sits after sensor digitization and before the external MCU/gateway. Cloud/IOC systems may configure and monitor it through that MCU, but local risk/fault outputs remain available without a cloud round trip.
 
-## Đầu vào dự kiến
+## 2. Fixed v0.1 architectural decisions
 
-- Số liệu mưa theo khoảng thời gian xác định.
-- Chỉ số nước/độ ẩm đất hoặc áp lực nước lỗ rỗng nếu cảm biến thực tế hỗ trợ.
-- Độ nghiêng hoặc dịch chuyển sau khi số hoá.
-- Cờ hợp lệ dữ liệu và chu kỳ lấy mẫu do trạm hiện trường cung cấp.
+- Digital-only ASIC for Tiny Tapeout SKY26d / SKY130.
+- Target reservation: 3×2 tiles; physical fit still has to be proven by synthesis/place-and-route.
+- Standard system clock target: 10 MHz.
+- External MCU is retained for sensor protocols, ADCs, communications, OTA and cloud connectivity.
+- MCU-to-ASIC control interface: SPI Mode 0, initial target <=2 MHz.
+- Four unsigned 16-bit logical sensor channels: rain, water-related condition, tilt and displacement.
+- Sensor values are engineering-code values; unit scaling is owned by the external MCU/system specification.
+- Separate risk state and fault indication.
 
-## Đầu ra dự kiến
+## 3. Risk processing
 
-- Trạng thái: bình thường, cần kiểm tra, nguy cơ cao, lỗi dữ liệu.
-- Mã lý do cảnh báo và cờ dữ liệu không hợp lệ.
-- Giao tiếp số tới bộ điều khiển/trạm hiện trường để ghi log và truyền thông.
+Each sensor has programmable WATCH and CRITICAL thresholds. Hardware severity is:
 
-## Các quyết định còn mở
+- `0`: value below WATCH threshold;
+- `1`: value at/above WATCH but below CRITICAL;
+- `2`: value at/above CRITICAL.
 
-- Vị trí thử nghiệm, dữ liệu nền, chủng loại cảm biến, đơn vị đo và dải giá trị.
-- Giao tiếp chip–trạm, pinout, tần số clock, reset, xử lý khi mất cảm biến/nguồn.
-- Định nghĩa thuật toán, ngưỡng và thời gian quan sát; các mức trên chỉ là khung yêu cầu.
-- MCU tích hợp hay ngoài chip; cấu hình 3×2 tile là mục tiêu đặt chỗ, chưa phải xác nhận fit vật lý.
-- Quy trình hiệu chuẩn, kiểm nghiệm địa kỹ thuật và trách nhiệm ra quyết định cảnh báo hiện trường.
+Each severity is multiplied by a programmable 4-bit weight. The four contributions are summed to an 8-bit risk score. Programmable score thresholds produce candidate levels `NORMAL`, `WATCH`, `WARNING`, `CRITICAL`.
 
-Tài liệu này là bản nháp yêu cầu, không phải đặc tả cuối cùng hoặc chứng minh chip phát hiện sạt lở.
+State changes require programmable consecutive-sample persistence for escalation and de-escalation.
+
+The numerical thresholds and weights in verification are test vectors only; they are not field safety criteria.
+
+## 4. Data integrity and fault handling
+
+The chip shall expose a fault when any of the following is true:
+
+- a bit required by `REQUIRED_MASK` is missing from `VALID_MASK`;
+- committed data becomes stale relative to the optional 1 Hz timeout;
+- `EXT_FAULT` is asserted;
+- WATCH/CRITICAL threshold ordering or score-threshold ordering is invalid.
+
+A fault is reported independently of the risk FSM so that invalid data cannot silently appear as a valid low-risk result.
+
+## 5. Event handling
+
+The chip records event count and last-event state/reason/score. `IRQ` latches when a risk-state transition or a new fault occurs and remains asserted until software clears it.
+
+## 6. Items intentionally outside v0.1 ASIC scope
+
+- analog sensor interfaces/ADCs;
+- LoRaWAN/4G/5G/Starlink radios;
+- GNSS;
+- cloud, GIS, ERP, Digital Twin and IOC software;
+- general-purpose CPU/MCU and firmware boot stack;
+- direct high-power actuator drive;
+- geotechnical model calibration and formal safety certification.
+
+## 7. Open engineering decisions before field trial
+
+- exact deployment site and sensing modalities;
+- physical units and fixed-point/scaling convention for each 16-bit channel;
+- qualified sensor ranges, sampling interval and calibration process;
+- evidence-based field thresholds and weights;
+- local alarm/actuator interlock policy;
+- EMC, power, packaging and environmental qualification outside the Tiny Tapeout demonstration chip.
