@@ -89,7 +89,9 @@ module hs49_spi_slave (
                     end
                 end
 
-                if (sclk_fall && (bit_count >= 4'd8) && !command_byte[7])
+                // Keep the first read bit stable across the command/data boundary.
+                // Subsequent falling edges advance to the next MISO bit.
+                if (sclk_fall && (bit_count > 4'd8) && !command_byte[7])
                     tx_shift <= {tx_shift[6:0], 1'b0};
             end
         end
