@@ -3,7 +3,10 @@ SIM ?= icarus
 FST ?= -fst
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v spi_slave.v register_bank.v sensor_validator.v risk_engine.v risk_fsm.v event_logger.v
+PROJECT_SOURCES = project.v spi_slave.v mmio_bridge.v register_bank.v sensor_validator.v risk_engine.v risk_fsm.v event_logger.v \
+	cpu/tinyqv/tinyqv.v cpu/tinyqv/cpu.v cpu/tinyqv/core.v cpu/tinyqv/decode.v \
+	cpu/tinyqv/alu.v cpu/tinyqv/register.v cpu/tinyqv/counter.v \
+	cpu/tinyqv/mem_ctrl.v cpu/tinyqv/qspi_ctrl.v
 
 ifneq ($(GATES),yes)
 SIM_BUILD = sim_build/rtl
@@ -17,6 +20,7 @@ VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
 endif
 
 COMPILE_ARGS += -I$(SRC_DIR)
+COMPILE_ARGS += -DSIM
 VERILOG_SOURCES += $(PWD)/tb.v
 TOPLEVEL = tb
 COCOTB_TEST_MODULES = test

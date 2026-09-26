@@ -12,3 +12,13 @@
 - reserved Hasemi MMIO window `0x0800_1000`-`0x0800_107F`;
 - documented v0.2 pin map, reset policy, license plan and verification matrix.
 
+### 2026-09-27 - CPU, MMIO and QSPI integration
+
+- imported the byte-identical nine-file TinyQV CPU/QSPI dependency closure;
+- added the `0x0800_1000` byte-native Hasemi MMIO bridge;
+- retained the external SPI register path with synchronized SPI-transaction
+  priority over CPU MMIO;
+- mapped shared external QSPI flash/PSRAM to all eight `uio` pins;
+- forced deterministic safe QSPI output/output-enable values during reset;
+- updated Tiny Tapeout source and pin metadata without adding unrelated
+  peripherals or synthesized program/data RAM.
