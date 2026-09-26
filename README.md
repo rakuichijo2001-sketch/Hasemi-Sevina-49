@@ -1,23 +1,28 @@
 # Hasemi Sevina 49
 
-ASIC thử nghiệm xử lý dữ liệu cảm biến để **giám sát dấu hiệu mất ổn định taluy đường đèo tại Lâm Đồng**. Dự kiến dùng Tiny Tapeout SKY26d trên SKY130, đặt chỗ mục tiêu **3×2 tile**.
+ASIC thử nghiệm xử lý dữ liệu cảm biến để **giám sát dấu hiệu mất ổn định taluy đường đèo tại Lâm Đồng**. Target hiện tại là Tiny Tapeout **SKY26d / SKY130**, mục tiêu allocation **3×2 tile**.
 
-## Trạng thái dự án
+## Kiến trúc V1 đã chốt
 
-Repo được tạo từ [mẫu Verilog SKY130 của Tiny Tapeout](https://github.com/TinyTapeout/ttsky-verilog-template). Các tệp `src/project.v`, `info.yaml` và `test/` hiện vẫn là **ví dụ của mẫu**, chưa phải thiết kế Hasemi Sevina 49. Chưa có RTL hoàn chỉnh, dữ liệu đo thực địa, GDS đã kiểm tra hay chip được chế tạo. **Không nộp dự án khi các tệp này chưa được thay thế và kiểm thử.**
+- Digital ASIC; cảm biến, ADC/AFE, nguồn, MCU/data logger, truyền thông và cảnh báo hiện trường nằm ngoài chip.
+- Không tích hợp MCU trong V1.
+- SPI slave Mode 0 trên `uio[0:3]`, core clock 10 MHz.
+- Dữ liệu logic: recent rainfall, antecedent rainfall, water/pore-pressure or moisture indicator, movement/tilt, movement rate, valid mask và sequence number.
+- Data-quality checks: CRC-8, required-channel mask, optional range checks, sequence continuity và stale-data timeout.
+- Classification: configurable low/high thresholds, hysteresis, persistence, weighted score và severe-motion override.
+- Output states: NORMAL, CHECK/NEED_INSPECTION, HIGH_RISK, DATA_FAULT.
 
-## Định hướng chức năng
+Đây là chip phân loại **trạng thái dữ liệu/điều kiện theo cấu hình**, không phải thiết bị khẳng định chắc chắn một vụ sạt lở sẽ xảy ra và không thay thế đánh giá địa kỹ thuật.
 
-- Nhận dữ liệu đã số hoá từ trạm cảm biến ngoài chip, dự kiến gồm mưa, điều kiện nước trong đất và độ nghiêng/dịch chuyển.
-- Phát hiện dữ liệu lỗi/mất; tính chỉ số và trạng thái theo ngưỡng có thể hiệu chỉnh sau khảo sát thực địa.
-- Xuất trạng thái để trạm điều khiển ghi nhật ký, truyền tin hoặc kích hoạt cảnh báo theo quy trình vận hành riêng.
-- Thiết kế không tự nhận là có thể dự báo mọi vụ sạt lở hay thay thế đánh giá địa kỹ thuật.
+## Trạng thái kiểm chứng
 
-## Việc tiếp theo
+RTL V1, testbench và tài liệu đang được triển khai trên branch `hasemi-v1-rtl`. Không xem dự án là sẵn sàng nộp fab cho tới khi có bằng chứng tương ứng từ RTL regression, SKY26d GDS build, precheck, gate-level test và review timing/area.
 
-1. Chốt yêu cầu và sơ đồ giao tiếp trong [bản nháp yêu cầu](docs/requirements-draft.md).
-2. Thiết kế RTL và testbench; cập nhật `info.yaml`, `docs/info.md`, pinout và `test/Makefile` nhất quán.
-3. Chạy mô phỏng, CI GDS, precheck và kiểm tra timing/diện tích 3×2 tile cho SKY26d.
-4. Đối chiếu ngưỡng trên dữ liệu từ vị trí triển khai trước khi đánh giá hiệu quả cảnh báo.
+## Tài liệu
 
-**Lưu ý quyền sở hữu:** Repo đang để Public và mẫu Tiny Tapeout kèm giấy phép Apache-2.0. Rà lại phạm vi công bố và quyền sở hữu trước khi đẩy thuật toán hoặc RTL dự định bảo hộ.
+- [`docs/requirements-draft.md`](docs/requirements-draft.md): yêu cầu kiến trúc và các giả định cần xác minh.
+- [`docs/info.md`](docs/info.md): datasheet-style description, SPI protocol và register map.
+
+## Lưu ý quyền sở hữu
+
+Repo hiện Public và template Tiny Tapeout dùng Apache-2.0. Cần rà phạm vi công bố trước khi đưa dữ liệu thực địa, calibration, thuật toán nâng cao hoặc RTL dự định bảo hộ lên GitHub.
