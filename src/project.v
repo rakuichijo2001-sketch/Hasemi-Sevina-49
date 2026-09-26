@@ -140,6 +140,7 @@ module tt_um_rakuichijo2001_hasemi_sevina_49 (
     wire [7:0] reg_rd_data;
 
     hs49_mmio_bridge u_mmio_bridge (
+        .clk(clk),
         .rst_n(rst_n),
         .cpu_addr(cpu_data_addr),
         .cpu_write_n(cpu_data_write_n),

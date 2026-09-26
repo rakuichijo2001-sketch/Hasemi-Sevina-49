@@ -61,7 +61,9 @@ async def test_hasemi_sevina_49_core(dut):
 
     dut.ena.value = 1
     dut.ui_in.value = 0x04
-    dut.uio_in.value = 0
+    dut.qspi_model_enable.value = 0
+    dut.qspi_latency_cfg.value = 0
+    dut.uio_in_direct.value = 0
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
@@ -132,7 +134,9 @@ async def start_and_reset(dut):
     cocotb.start_soon(Clock(dut.clk, 100, unit="ns").start())
     dut.ena.value = 1
     dut.ui_in.value = 0x04
-    dut.uio_in.value = 0
+    dut.qspi_model_enable.value = 0
+    dut.qspi_latency_cfg.value = 0
+    dut.uio_in_direct.value = 0
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1

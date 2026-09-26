@@ -1,4 +1,6 @@
 # Hasemi-Sevina-49 cocotb testbench
+.DEFAULT_GOAL := regression
+
 SIM ?= icarus
 FST ?= -fst
 TOPLEVEL_LANG ?= verilog
@@ -22,7 +24,18 @@ endif
 COMPILE_ARGS += -I$(SRC_DIR)
 COMPILE_ARGS += -DSIM
 VERILOG_SOURCES += $(PWD)/tb.v
+VERILOG_SOURCES += $(PWD)/sim_qspi.v
 TOPLEVEL = tb
-COCOTB_TEST_MODULES = test
+COCOTB_TEST_MODULES = test,test_v02
+
+.PHONY: mmio-unit
+mmio-unit:
+	mkdir -p sim_build
+	iverilog -g2012 -s mmio_bridge_tb -o sim_build/mmio_bridge.vvp \
+		$(SRC_DIR)/mmio_bridge.v $(PWD)/mmio_bridge_tb.v
+	vvp sim_build/mmio_bridge.vvp
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
+
+.PHONY: regression
+regression: $(COCOTB_RESULTS_FILE)
