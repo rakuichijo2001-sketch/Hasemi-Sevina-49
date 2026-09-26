@@ -23,12 +23,12 @@ module hs49_spi_slave (
     wire cs_active = ~cs_sync[2];
 
     reg [3:0] bit_count;
-    reg [7:0] rx_shift;
+    reg [6:0] rx_shift;
     reg [7:0] command_byte;
     reg [7:0] tx_shift;
     reg       tx_load_pending;
 
-    wire [7:0] rx_next = {rx_shift[6:0], mosi_sync[2]};
+    wire [7:0] rx_next = {rx_shift, mosi_sync[2]};
 
     assign spi_miso = cs_active ? tx_shift[7] : 1'b0;
 
@@ -51,7 +51,7 @@ module hs49_spi_slave (
             wr_addr         <= 7'h00;
             wr_data         <= 8'h00;
             bit_count       <= 4'd0;
-            rx_shift        <= 8'h00;
+            rx_shift        <= 7'h00;
             command_byte    <= 8'h00;
             tx_shift        <= 8'h00;
             tx_load_pending <= 1'b0;
@@ -60,7 +60,7 @@ module hs49_spi_slave (
 
             if (!cs_active) begin
                 bit_count       <= 4'd0;
-                rx_shift        <= 8'h00;
+                rx_shift        <= 7'h00;
                 tx_shift        <= 8'h00;
                 tx_load_pending <= 1'b0;
             end else begin
@@ -70,7 +70,7 @@ module hs49_spi_slave (
                 end
 
                 if (sclk_rise) begin
-                    rx_shift <= rx_next;
+                    rx_shift <= rx_next[6:0];
 
                     if (bit_count == 4'd7) begin
                         command_byte    <= rx_next;

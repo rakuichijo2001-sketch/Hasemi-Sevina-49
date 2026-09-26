@@ -49,7 +49,10 @@ module hs49_risk_engine (
     wire [5:0] tilt_contrib  = weighted_contribution(tilt_sev, weight_tilt);
     wire [5:0] disp_contrib  = weighted_contribution(disp_sev, weight_displacement);
 
-    wire [7:0] score_sum = rain_contrib + water_contrib + tilt_contrib + disp_contrib;
+    wire [7:0] score_sum = {2'b00, rain_contrib} +
+                           {2'b00, water_contrib} +
+                           {2'b00, tilt_contrib} +
+                           {2'b00, disp_contrib};
 
     assign risk_score = score_sum;
     assign reason_code = {
