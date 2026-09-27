@@ -14,7 +14,7 @@ module hs49_mmio_bridge (
     input  wire  [1:0] cpu_read_n,
     input  wire [31:0] cpu_write_data,
     output wire        cpu_ready,
-    output reg  [31:0] cpu_read_data,
+    output wire [31:0] cpu_read_data,
 
     input  wire        spi_active,
     input  wire        spi_wr_en,
@@ -48,20 +48,29 @@ module hs49_mmio_bridge (
     assign cpu_ready = !rst_n ? 1'b0 :
                        cpu_bank_access ? !spi_active : 1'b1;
 
+    reg        cpu_read_upper;
+    reg [7:0]  cpu_read_byte;
+
     // TinyQV consumes a returned 32-bit load over several serial-core cycles,
     // after its read strobe has deasserted. Latch the granted response so an
     // external SPI transaction cannot change it while the CPU consumes it.
     // Unsupported sizes and unmapped reads complete with all ones.
     always @(posedge clk) begin
-        if (!rst_n)
-            cpu_read_data <= 32'hFFFF_FFFF;
-        else if (cpu_read_req && cpu_ready) begin
-            if (cpu_window && cpu_byte_read && !spi_active)
-                cpu_read_data <= {24'h000000, reg_rd_data};
-            else
-                cpu_read_data <= 32'hFFFF_FFFF;
+        if (!rst_n) begin
+            cpu_read_upper <= 1'b1;
+            cpu_read_byte  <= 8'hFF;
+        end else if (cpu_read_req && cpu_ready) begin
+            if (cpu_window && cpu_byte_read && !spi_active) begin
+                cpu_read_upper <= 1'b0;
+                cpu_read_byte  <= reg_rd_data;
+            end else begin
+                cpu_read_upper <= 1'b1;
+                cpu_read_byte  <= 8'hFF;
+            end
         end
     end
+
+    assign cpu_read_data = {{24{cpu_read_upper}}, cpu_read_byte};
 
     assign reg_rd_addr = spi_active ? spi_rd_addr : cpu_addr[6:0];
     assign spi_rd_data = reg_rd_data;
