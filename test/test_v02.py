@@ -110,3 +110,31 @@ async def test_qspi_reset_during_boot_is_deterministic(dut):
 
     assert await spi_read(dut, 0x30) == 4
     assert (await spi_read(dut, 0x31)) & 0x03 == 3
+
+
+@cocotb.test()
+async def test_qspi_bus_directions_and_concurrent_spi(dut):
+    """Verify phase-by-phase QSPI uio_oe bus directions and concurrent external SPI transactions."""
+    cocotb.start_soon(Clock(dut.clk, 100, unit="ns").start())
+    await reset_with_qspi_model(dut, latency=1)
+
+    # Sample QSPI output enables across multiple cycles to verify proper pin directions
+    for _ in range(50):
+        oe = int(dut.uio_oe.value)
+        # In SKY130 TinyTapeout pin map:
+        # uio[0]=FLASH_CS, uio[1..2]=SD0..1, uio[3]=SCK, uio[4..5]=SD2..3, uio[6]=RAM_A_CS, uio[7]=RAM_B_CS
+        # Output enables must either be:
+        # 0xC9 (CS lines & SCK active, SD pins input during read) or
+        # 0xFF (all pins output during command/address/write)
+        assert oe in (0xC9, 0xFF), f"Illegal uio_oe state: 0x{oe:02X}"
+        await ClockCycles(dut.clk, 1)
+
+    # Perform concurrent SPI transactions during active CPU boot / memory access
+    assert await spi_read(dut, 0x00) == 0x49
+    assert await spi_read(dut, 0x01) == 0x10
+
+    # Write a unique threshold via external SPI while CPU is running
+    from test import spi_write
+    await spi_write(dut, 0x24, 0x42)
+    assert await spi_read(dut, 0x24) == 0x42
+
