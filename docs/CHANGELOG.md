@@ -41,3 +41,10 @@
   at 90% of the first optimization iteration;
 - kept the exact-SHA GDS flow and final fit decision open while run
   `36259705455` remains in progress; no speculative RTL optimization started.
+
+### 2026-09-27 - completed job-log review
+
+- incorporated the exact implementation SHA's cancelled 3x2 hardening log;
+- recorded mapped synthesis area, placement utilization and detailed-route
+  violation progression without claiming final GDS, DRC, GLS or physical fit;
+- retained 3x2 as the design target pending a measured optimization.
