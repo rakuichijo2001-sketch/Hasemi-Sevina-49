@@ -32,3 +32,12 @@
   commit/status reads and PSRAM A round-trip;
 - verified deterministic reset during boot and successful reboot;
 - preserved all four v0.1 tests; combined local RTL regression is 6/6 PASS.
+
+### 2026-09-27 - PD-aware development gates
+
+- added repository rules requiring measured synthesis and same-SHA 3x2 physical
+  evidence before accepting RTL optimizations or claiming fit;
+- recorded the 21,842 detailed-route violations only as an interim observation
+  at 90% of the first optimization iteration;
+- kept the exact-SHA GDS flow and final fit decision open while run
+  `36259705455` remains in progress; no speculative RTL optimization started.
