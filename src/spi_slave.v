@@ -11,7 +11,8 @@ module hs49_spi_slave (
     output reg        wr_en,
     output reg  [6:0] wr_addr,
     output reg  [7:0] wr_data,
-    output wire       spi_miso
+    output wire       spi_miso,
+    output wire       transaction_active
 );
 
     reg [2:0] sclk_sync;
@@ -31,6 +32,7 @@ module hs49_spi_slave (
     wire [7:0] rx_next = {rx_shift, mosi_sync[2]};
 
     assign spi_miso = cs_active ? tx_shift[7] : 1'b0;
+    assign transaction_active = cs_active;
 
     always @(posedge clk) begin
         if (!rst_n) begin
